@@ -3,36 +3,69 @@
 <head>
     <title>Group By Table</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+    <style>
+        .container {
+            display:flex;
+            flex-wrap: wrap;
+            margin-top: 5%;
+            margin-left: 0%;
+        }
+        .container > .left-panel {
+            flex-basis: 50%;
+            padding-right: 10%;
+        }
+        .container > .right-panel {
+            flex-basis: 50%;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <form method="POST" action="/apply">
-            <div class="form-group">
-                <label for="groupby">Group by:</label>
-                <select id="groupby" name="groupby" multiple class="form-control">
-                    {% for column in columns %}
-                        <option value="{{ column }}">{{ column }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="operation">Operation:</label>
-                <select id="operation" name="operation" multiple class="form-control">
-                    {% for operation in operations %}
-                        <option value="{{ operation }}">{{ operation }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <input type="submit" value="Apply" class="btn btn-primary">
-        </form>
-    </div>
-    {% if table %}
-        <div class="container">
-            {{ table | safe }}
+        <div class="left-panel">
+            <form method="POST" action="/apply">
+                <div class="form-group">
+                    <label for="groupby">Group by:</label>
+                    <select id="groupby" name="groupby[]" multiple class="form-control select2" data-placeholder="Select columns">
+                        {% for column in columns %}
+                            <option value="{{ column }}">{{ column }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="operation">Operation:</label>
+                    <select id="operation" name="operation[]" multiple class="form-control select2" data-placeholder="Select operations">
+                        {% for operation in operations %}
+                            <option value="{{ operation }}">{{ operation }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="columns">Columns to view:</label>
+                    <select id="columns" name="columns[]" multiple class="form-control select2" data-placeholder="Select columns">
+                        {% for column in columns %}
+                            <option value="{{ column }}">{{ column }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <input type="submit" value="Apply" class="btn btn-primary">
+            </form>
         </div>
-    {% endif %}
+        <div class="right-panel">
+            {% if table %}
+                {{ table | safe }}
+            {% endif %}
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('.select2').select2({
+                placeholder: 'Select options',
+                allowClear: true
+            });
+        });
+    </script>
 </body>
 </html>
