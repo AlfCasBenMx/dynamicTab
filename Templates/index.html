@@ -1,71 +1,106 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Group By Table</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+    <title>Table Operations</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <style>
-        .container {
-            display:flex;
-            flex-wrap: wrap;
-            margin-top: 5%;
-            margin-left: 0%;
-        }
-        .container > .left-panel {
-            flex-basis: 50%;
-            padding-right: 10%;
-        }
-        .container > .right-panel {
-            flex-basis: 50%;
+        #tableContainer {
+            display: flex;
+            justify-content: center;
+            max-height: 400px;
+            overflow-y: auto;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="left-panel">
-            <form method="POST" action="/apply">
-                <div class="form-group">
-                    <label for="groupby">Group by:</label>
-                    <select id="groupby" name="groupby[]" multiple class="form-control select2" data-placeholder="Select columns">
-                        {% for column in columns %}
+        <h1 class="mt-4 mb-4">Table Operations</h1>
+        <div class="row">
+            <div class="col-md-4">
+                <form id="myForm">
+                    <div class="form-group">
+                        <label for="groupby">Group By:</label>
+                        <select id="groupby" name="groupby[]" class="form-control" multiple>
+                            {% for column in columns %}
                             <option value="{{ column }}">{{ column }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="operation">Operation:</label>
-                    <select id="operation" name="operation[]" multiple class="form-control select2" data-placeholder="Select operations">
-                        {% for operation in operations %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="columns">Columns:</label>
+                        <select id="columns" name="columns[]" class="form-control" multiple>
+                            {% for column in columns %}
+                            <option value="{{ column }}">{{ column }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="operation">Operations:</label>
+                        <select id="operation" name="operation[]" class="form-control" multiple>
+                            {% for operation in operations %}
                             <option value="{{ operation }}">{{ operation }}</option>
-                        {% endfor %}
-                    </select>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Apply</button>
+                </form>
+            </div>
+            <div class="col-md-8">
+                <div id="tableContainer">
+                    <input class="form-control" id="searchInput" type="text" placeholder="Search..">
+                    <br>
+                    <!-- The table will be inserted here -->
                 </div>
-                <div class="form-group">
-                    <label for="columns">Columns to view:</label>
-                    <select id="columns" name="columns[]" multiple class="form-control select2" data-placeholder="Select columns">
-                        {% for column in columns %}
-                            <option value="{{ column }}">{{ column }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <input type="submit" value="Apply" class="btn btn-primary">
-            </form>
+            </div>
         </div>
-        <div class="right-panel">
-            {% if table %}
-                {{ table | safe }}
-            {% endif %}
-        </div>
-    </div>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $('.select2').select2({
-                placeholder: 'Select options',
-                allowClear: true
+        <script>
+            $(document).ready(function() {
+                $('#myForm').on('submit', function(e) {
+                    e.preventDefault();
+                    $.ajax({
+                        url: '/apply',
+                        method: 'POST',
+                        data: $(this).serialize(),
+                        success: function(data) {
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            // Clear the tableContainer div
+                            $('#tableContainer').empty();
+
+                            // Append the new table
+                            $('#tableContainer').append(data.table);
+
+                            // Apply search filter after the table has been added to the DOM
+                            $("#searchInput").on("keyup", function() {
+                                var value = $(this).val().toLowerCase();
+                                $("#resultTable tr").filter(function() {
+                                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                                });
+                            });
+                        }
+                    }
+                    });
+                });
+        
+                $('#groupby').on('change', function() {
+                    var groupby_values = $(this).val();
+                    var columns_selected = $("#columns").val();
+                    $("#columns").empty();
+                    {% for column in columns %}
+                    if ($.inArray("{{ column }}", groupby_values) === -1) {
+                        var new_option = $("<option></option>").attr("value", "{{ column }}").text("{{ column }}");
+                        if ($.inArray("{{ column }}", columns_selected) !== -1) {
+                            new_option.attr("selected", "selected");
+                        }
+                        $("#columns").append(new_option);
+                    }
+                    {% endfor %}
+                });
             });
-        });
-    </script>
+        </script>
+        
+    </div>
 </body>
 </html>
